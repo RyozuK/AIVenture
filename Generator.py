@@ -9,7 +9,10 @@ openai.api_key = Config.open_ai_key
 
 
 class Generator:
-    pattern = r"\{\"name\": ?\"(?P<name>[A-Za-z0-9 ]*?)\", ?\"description\": ?\"(?P<description>.*?)\".*?\"exits\": ?(?P<exits>\[.*?\])"
+    pat_name = r'\"name\":.*?\"(?P<name>[A-Za-z0-9 ]*?)\",'
+    pat_desc = r'\"description\": ?\"(?P<description>.*?)\"'
+    pat_exit = r'\"exits\": ?(?P<exits>\[.*?\])'
+    pattern = r"\{\"name\":.*?\"(?P<name>[A-Za-z0-9 ]*?)\",.*?\"description\": ?\"(?P<description>.*?)\".*?\"exits\": ?(?P<exits>\[.*?\])"
     instance = None
     initialized = False
     preamble = """You are a text adventure game room generator.
@@ -23,17 +26,6 @@ Example
 Here is the adventure so far:
 """
 
-    #
-    # def __init__(self):
-    #     if not Generator.initialized:
-    #         self.name = "hello"
-    #         Generator.initialized = True
-    #
-    # def __new__(cls, *args, **kwargs):
-    #     if cls.instance is None:
-    #         cls.instance = super().__new__(cls)
-    #     return cls.instance
-    #
     @classmethod
     def new_room(cls, history):
         # First, we build the message log
@@ -42,36 +34,21 @@ Here is the adventure so far:
 
         response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=log)
         data = response['choices'][0]['message']['content']
-        # print(f"OpenAI responded with [{data}]")
-        # print("------------------------------\n", "\n".join([str(x) for x in log]))
 
         data = data.replace("'", '"')
 
-        """Fucking JSON"""
-
         result = re.search(cls.pattern, data, re.MULTILINE | re.DOTALL)
-        if result is None:
-            print (f"Bad data from OpenAI: {data}")
-            return None
+        if result is not None:
+            return World.Room(name=result.group(1), description=result.group(2),
+                              exits=json.loads(result.group(3)))
+        name = re.search(cls.pat_name, data, re.MULTILINE | re.DOTALL)
+        desc = re.search(cls.pat_desc, data, re.MULTILINE | re.DOTALL)
+        exits = re.search(cls.pat_exit, data, re.MULTILINE | re.DOTALL)
+        if name is not None and desc is not None and exits is not None:
+            print("Used method 2")
+            return World.Room(name=name.group(1), description=desc.group(1),
+                              exits=exits.group(1))
 
-        return World.Room(name=result.group(1), description=result.group(2),
-                          exits=json.loads(result.group(3)))
+        print(f"Bad data from OpenAI: {data}")
+        return None
 
-        # for line in data.split('\n'):
-        #     try:
-        #         data = json.loads(data)
-        #         return World.Room(**data)
-        #     except:
-        #         # breakpoint()
-        #         """Nothing"""
-        # print(f"OpenAI gave back bad data: {data}")
-        # breakpoint()
-
-
-if __name__ == "__main__":
-    this = Generator()
-    this2 = Generator()
-    this2.name = "Goodbye"
-    print(this.name)
-    this3 = Generator()
-    print(this.name)

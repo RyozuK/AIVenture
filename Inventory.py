@@ -76,7 +76,7 @@ class Inventory:
 
     def add_item(self, item: [Item, str]):
         if type(item) is str:
-            item = item  # TODO Get item from item database
+            item = item
         self.items.append(item)
 
     def __str__(self):

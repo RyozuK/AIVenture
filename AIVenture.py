@@ -1,14 +1,15 @@
 """Main gameplay loop for AIVenture"""
-import Generator
 import Mob
 import World
 
 
 class Game:
     def __init__(self):
-        self.gen = Generator.Generator()
-        self.player = Mob.Mob("Player", None)
         self.world = World.World()
+        start_room = World.get_start()
+        self.world.add_room(start_room)
+        self.player = Mob.Mob("Player", start_room.position)
+
         self.history = []
         self.commands = {
             "look": self.look,
@@ -24,31 +25,34 @@ class Game:
             "help": self.help
         }
 
+    def log(self, event: str) -> None:
+        self.history.append(event)
+        while len(self.history) > 20:
+            self.history = self.history[1:]
+
     def help(self, cmd: str = ""):
         self.display(f"You may do the following, {', '.join(self.commands.keys())}")
 
     def look(self, at: str = "") -> bool:
         """Looks around the current room if at is blank, or displays description of item or mob if it's found"""
         if at == "":
-            self.display(str(self.player.location.describe()), False)
-            self.history.append(str(self.player.location.json()))
+            room = self.world.get_room(self.player.location)
+            self.display(str(room.describe()), False)
+            self.log(str(room.json()))
         return self.player.alive()
 
     def go(self, where: str) -> bool:
         """Changes to the room in the given direction"""
-        if where not in self.player.location.exits:
+        old_room = self.world.get_room(self.player.location)
+        if where not in old_room.exits:
             self.display(f"You try to go {where} but can't figure out how to.")
-            return self.player.alive()
-        if self.player.location.exits[where] is None:
-            """Have to generate a new room!"""
+        else:
             self.display(f"You move {where}.")
-            new_room = Generator.Generator().new_room(self.history)
-            if new_room is None:
-                return self.player.alive()
-            new_room.exits[World.flip(where)] = self.player.location
-            self.player.location.exits[where] = new_room
-        self.player.go(where)
-        self.display(f"You arrive at {self.player.location}.")
+            pos = self.player.location
+            new_room = self.world.go_to_room(pos, where, self.history)
+            if new_room is not None:
+                self.player.location = new_room.position
+                self.display(f"You arrive at {new_room}.")
         return self.player.alive()
 
     def take(self, thing: str) -> bool:
@@ -89,9 +93,9 @@ class Game:
         return self.player.alive()
 
     def display(self, text, log=True) -> None:
-        """This should be """
+        """Displays the text and logs it for AI use."""
         if log:
-            self.history.append(text)
+            self.log(text)
         print(text)
 
     def run_game(self):
@@ -110,6 +114,8 @@ class Game:
             print(f"player wants to [{cmd}] with [{rest}]")
             if cmd in self.commands:
                 running = self.commands[cmd](rest)
+            elif cmd in World.Directions:
+                running = self.go(cmd)
             elif cmd == "":
                 continue
             else:

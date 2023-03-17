@@ -6,7 +6,7 @@ from Inventory import Inventory
 class Mob:
     def __init__(self, name, location):
         self.id = 0
-        self.location = World.get_start()
+        self.location = location
         self.name = name
         self.cur_hp = 10
         self.max_hp = 10
