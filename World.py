@@ -62,7 +62,6 @@ class World:
         return self.rooms[pos]
 
 
-
 class Room:
 
     def __init__(self, name: str, description: str, exits=None, items=None, position=(0, 0, 0)):
