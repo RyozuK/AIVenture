@@ -1,0 +1,72 @@
+# AIVenture — Configuration Template
+# Copy this file to `config.yaml` and fill in your values.
+
+game:
+  title: "AIVenture"
+  max_context_turns: 15           # Turns of recent history sent to the LLM
+  auto_save_interval: 10          # Turns between automatic saves
+  death_retains_xp: true          # Keep XP on death?
+  death_item_loss: "random"       # none | random | all_consumables
+
+llm:
+  # Provider type
+  provider: "openai"              # openai | ollama | custom
+
+  # Endpoint URL
+  #   openai  → https://api.openai.com/v1
+  #   ollama  → http://localhost:11434/v1
+  #   custom  → your OpenAI-compatible URL
+  endpoint: "https://api.openai.com/v1"
+
+  # Model name
+  model: "gpt-4o-mini"
+
+  # API key — or set the matching env var:
+  #   OPENAI_API_KEY, OLLAMA_API_KEY, or CUSTOM_API_KEY
+  api_key: null
+
+  # Generation parameters
+  temperature: 0.9                # 0.0 (deterministic) → 1.5 (wild)
+  max_tokens: 1024                # Max tokens per LLM response
+  supports_tool_calling: true     # Set false for older models
+
+  # Optional lighter/faster model for simple tasks
+  # light_model:
+  #   provider: "ollama"
+  #   endpoint: "http://localhost:11434/v1"
+  #   model: "dolphin-mistral:7b"
+
+persistence:
+  # Save strategy
+  provider: "json"                # json | sqlite | memory
+  path: "saves"                   # Directory (json) or file path (sqlite)
+
+client:
+  type: "console"                 # console | websocket | discord
+  prompt: ":> "                   # Input prompt string
+  show_room_on_entry: true        # Show full room description on entry
+
+discord:
+  # Bot token (required for discord client mode)
+  # Set via env var for security:
+  token: "${DISCORD_TOKEN}"
+
+  # Bot display name
+  bot_name: "AIVentureBot"
+
+  # Embed color (hex integer, warm brown dungeon feel by default)
+  embed_color: 482887  # 0x4a3728 in decimal
+
+  # Reaction quick-actions (add emoji reactions to messages)
+  reactions: true
+  reactions_timeout: 300          # Seconds before reaction listeners expire
+
+  # Restrict gameplay to DMs only
+  allow_dms_only: true
+
+  # Custom emojis for special events
+  generate_indicator: "⏳"        # Shown while LLM is thinking
+  death_emoji: "💀"
+  level_up_emoji: "⬆️"
+  quest_emoji: "📜"
+  loot_emoji: "✨"
