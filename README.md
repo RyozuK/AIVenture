@@ -21,7 +21,7 @@
 ## Installation
 
 ```bash
-git clone https://github.com/.../AIVenture.git
+git clone https://github.com/RyozuK/AIVenture.git
 cd AIVenture
 pip install -e .
 ```
